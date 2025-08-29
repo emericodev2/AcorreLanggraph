@@ -1,0 +1,32 @@
+# Exclude deps directory completely
+deps/
+deps/*
+
+# Exclude virtual environment
+.venv/
+venv/
+
+# Exclude cache directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Exclude git
+.git/
+.gitignore
+
+# Exclude environment files
+.env
+.env.bak
+
+# Exclude test files
+test_*.py
+*_test.py
+
+# Exclude documentation
+README.md
+
+# Exclude local development files
+chroma_db/
+*.log
