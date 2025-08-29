@@ -1,6 +1,0 @@
-Metadata-Version: 2.4
-Name: dummy-package
-Version: 0.1.0
-Summary: Dummy package for LangGraph Cloud build compatibility
-Author: LangGraph Cloud
-Requires-Python: >=3.8
