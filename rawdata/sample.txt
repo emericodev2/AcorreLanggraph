@@ -1,0 +1,20 @@
+Sample Document for RAG Testing
+
+This is a sample text document that demonstrates the RAG (Retrieval-Augmented Generation) functionality of the LangGraph chatbot.
+
+Key Features:
+- Document loading from the rawdata folder
+- Support for multiple file formats (TXT, PDF, DOCX, MD, CSV)
+- Web scraping capabilities
+- Vector storage using ChromaDB
+- Semantic search and retrieval
+- Context-aware responses
+
+The chatbot can now:
+1. Load documents from the rawdata folder
+2. Scrape websites and add them to the knowledge base
+3. Search through stored documents
+4. Provide responses enhanced with relevant document context
+5. Track all operations in LangSmith
+
+This enables the chatbot to give more accurate and contextual responses based on your specific documents and data sources.
