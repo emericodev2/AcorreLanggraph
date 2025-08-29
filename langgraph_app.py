@@ -4,4 +4,4 @@ from app.agent import build_agent
 # so that required environment variables (e.g., OPENAI_API_KEY) are available.
 
 def create_graph():
-	return build_agent()
+    return build_agent()

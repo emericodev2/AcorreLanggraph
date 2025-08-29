@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from datetime import datetime
-from .rag import get_rag_manager
+from app.rag import get_rag_manager
 
 
 def get_time(_: Dict[str, Any]) -> str:

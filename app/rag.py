@@ -55,7 +55,7 @@ class RAGManager:
     def _initialize_simple_rag(self):
         """Initialize simple RAG as the primary system"""
         try:
-            from .rag_fallback import SimpleRAGManager
+            from app.rag_fallback import SimpleRAGManager
             self.simple_rag = SimpleRAGManager(str(self.rawdata_folder))
             print("✅ Simple RAG system initialized successfully")
         except Exception as e:

@@ -7,9 +7,9 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, Tool
 from langchain_core.tools import StructuredTool
 from langgraph.graph import StateGraph, END
 
-from .state import GraphState
-from .tools import TOOLS
-from .rag import get_rag_manager
+from app.state import GraphState
+from app.tools import TOOLS
+from app.rag import get_rag_manager
 
 
 # Load environment variables
