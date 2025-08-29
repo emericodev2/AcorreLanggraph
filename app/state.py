@@ -1,4 +1,4 @@
-from typing import TypedDict, List, Any
+from typing import TypedDict, List, Any, Optional
 
 class GraphState(TypedDict, total=False):
 	messages: List[Any]

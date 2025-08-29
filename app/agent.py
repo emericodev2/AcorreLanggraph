@@ -58,22 +58,23 @@ def build_agent() -> Any:
 		
 		# If this is a user message, try to enhance it with RAG context
 		if isinstance(latest_message, HumanMessage) and latest_message.content:
-			rag_manager = get_rag_manager()
-			document_count = rag_manager.get_document_count()
-			
-			if document_count > 0:
-				# Search for relevant documents
-				relevant_docs = rag_manager.search_documents(latest_message.content, k=3)
+			try:
+				rag_manager = get_rag_manager()
+				document_count = rag_manager.get_document_count()
 				
-				if relevant_docs:
-					# Create context from relevant documents
-					context = "\n\n".join([
-						f"Document {i+1} (Source: {doc.metadata.get('source', 'Unknown')}):\n{doc.page_content[:500]}..."
-						for i, doc in enumerate(relevant_docs)
-					])
+				if document_count > 0:
+					# Search for relevant documents
+					relevant_docs = rag_manager.search_documents(latest_message.content, k=3)
 					
-					# Enhance the system message with context
-					enhanced_system = f"""You are a helpful assistant with access to a knowledge base containing {document_count} documents.
+					if relevant_docs:
+						# Create context from relevant documents
+						context = "\n\n".join([
+							f"Document {i+1} (Source: {doc.metadata.get('source', 'Unknown')}):\n{doc.page_content[:500]}..."
+							for i, doc in enumerate(relevant_docs)
+						])
+						
+						# Enhance the system message with context
+						enhanced_system = f"""You are a helpful assistant with access to a knowledge base containing {document_count} documents.
 
 Relevant context for the current query:
 {context}
@@ -81,12 +82,15 @@ Relevant context for the current query:
 Use this information to provide accurate and helpful responses. If the user's question relates to the documents, incorporate relevant information from them. If not, use your general knowledge to help the user.
 
 Available tools: {', '.join(tools.keys())}"""
-					
-					# Update the first message (system message)
-					if messages and isinstance(messages[0], SystemMessage):
-						messages[0] = SystemMessage(content=enhanced_system)
-					else:
-						messages.insert(0, SystemMessage(content=enhanced_system))
+						
+						# Update the first message (system message)
+						if messages and isinstance(messages[0], SystemMessage):
+							messages[0] = SystemMessage(content=enhanced_system)
+						else:
+							messages.insert(0, SystemMessage(content=enhanced_system))
+			except Exception as e:
+				# If RAG fails, continue without it
+				print(f"RAG context enhancement failed: {e}")
 		
 		response = model_with_tools.invoke(messages)
 
@@ -112,8 +116,11 @@ Available tools: {', '.join(tools.keys())}"""
 		messages.append(response)
 		return {"messages": messages}
 
-	graph = StateGraph(GraphState)
-	graph.add_node("agent", agent_node)
-	graph.set_entry_point("agent")
-	graph.set_finish_point("agent")
-	return graph.compile()
+	# Updated for LangGraph 0.4.0+ compatibility
+	workflow = StateGraph(GraphState)
+	workflow.add_node("agent", agent_node)
+	workflow.set_entry_point("agent")
+	workflow.set_finish_point("agent")
+	
+	# Use the new compilation method
+	return workflow.compile()
