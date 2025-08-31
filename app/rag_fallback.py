@@ -42,6 +42,16 @@ class SimpleRAGManager:
         
         print("✅ Simple RAG manager initialized (no external vector store required)")
     
+    def clear_documents(self):
+        """Clear all stored documents and embeddings"""
+        self.documents = []
+        self.document_embeddings = []
+        print("🗑️ All documents and embeddings cleared")
+    
+    def clear_vectorstore(self):
+        """Clear all stored documents and embeddings (alias for clear_documents)"""
+        self.clear_documents()
+    
     def load_documents_from_folder(self) -> List[Document]:
         """Load all supported documents from the rawdata folder"""
         documents = []
@@ -106,15 +116,22 @@ class SimpleRAGManager:
             chunks = self.text_splitter.split_documents(documents)
             print(f"  📝 Created {len(chunks)} text chunks")
             
-            # Store chunks in memory
-            self.documents = chunks
-            print(f"  💾 Stored {len(chunks)} chunks in memory")
+            # Append chunks to existing documents instead of replacing
+            if not hasattr(self, 'documents') or self.documents is None:
+                self.documents = []
+            if not hasattr(self, 'document_embeddings') or self.document_embeddings is None:
+                self.document_embeddings = []
             
-            # Generate embeddings for chunks
+            # Store chunks in memory (append to existing)
+            self.documents.extend(chunks)
+            print(f"  💾 Added {len(chunks)} chunks to memory (total: {len(self.documents)} chunks)")
+            
+            # Generate embeddings for new chunks
             print("  🔍 Generating embeddings...")
             texts = [chunk.page_content for chunk in chunks]
-            self.document_embeddings = self.embeddings.embed_documents(texts)
-            print(f"  ✅ Generated embeddings for {len(chunks)} chunks")
+            new_embeddings = self.embeddings.embed_documents(texts)
+            self.document_embeddings.extend(new_embeddings)
+            print(f"  ✅ Generated embeddings for {len(chunks)} chunks (total: {len(self.document_embeddings)} embeddings)")
             
             return True
                 

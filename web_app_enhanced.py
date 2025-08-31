@@ -160,14 +160,16 @@ def process_documents(rag_manager, documents):
         traceback.print_exc()
         return False, str(e)
 
-def scrape_website(url):
+def scrape_website(url, rag_manager=None):
     """Scrape website content"""
     try:
-        from app.rag import get_rag_manager
-        rag = get_rag_manager()
-        documents = rag.scrape_website(url)
+        if rag_manager is None:
+            from app.rag import get_rag_manager
+            rag_manager = get_rag_manager()
+        
+        documents = rag_manager.scrape_website(url)
         if documents:
-            success = rag.process_and_store_documents(documents)
+            success = rag_manager.process_and_store_documents(documents)
             return success, None
         else:
             return False, "Failed to scrape website"
@@ -364,8 +366,128 @@ def main():
         # Get RAG manager from session state
         rag_manager = st.session_state.rag_manager
         
-        # Document loading
-        st.subheader("Load Documents")
+        # Document upload section
+        st.subheader("📤 Upload Documents")
+        
+        uploaded_files = st.file_uploader(
+            "Choose files to upload",
+            type=['txt', 'pdf', 'docx', 'md', 'csv'],
+            accept_multiple_files=True,
+            help="Supported formats: TXT, PDF, DOCX, MD, CSV. New documents will be added to your existing knowledge base."
+        )
+        
+        if uploaded_files:
+            st.info(f"📄 {len(uploaded_files)} file(s) selected for upload")
+            
+            # Show file details
+            file_details = []
+            for file in uploaded_files:
+                file_details.append({
+                    "Filename": file.name,
+                    "Size": f"{file.size / 1024:.1f} KB",
+                    "Type": file.type or "Unknown"
+                })
+            
+            df = pd.DataFrame(file_details)
+            st.dataframe(df, width='stretch')
+            
+            # Upload and process button
+            if st.button("🚀 Upload and Process Documents"):
+                with st.spinner("Uploading and processing documents..."):
+                    try:
+                        # Create rawdata folder if it doesn't exist
+                        rawdata_path = Path("rawdata")
+                        rawdata_path.mkdir(exist_ok=True)
+                        
+                        uploaded_documents = []
+                        
+                        for uploaded_file in uploaded_files:
+                            # Save file to rawdata folder
+                            file_path = rawdata_path / uploaded_file.name
+                            with open(file_path, "wb") as f:
+                                f.write(uploaded_file.getbuffer())
+                            
+                            st.success(f"✅ Saved {uploaded_file.name} to rawdata folder")
+                        
+                        # Load and process the uploaded documents
+                        documents, error = load_documents(rag_manager)
+                        
+                        if documents:
+                            success, error = process_documents(rag_manager, documents)
+                            
+                            if success:
+                                st.success(f"✅ Successfully uploaded and processed {len(uploaded_files)} document(s)!")
+                                st.rerun()
+                            else:
+                                st.error(f"❌ Error processing documents: {error}")
+                        else:
+                            st.error(f"❌ Error loading documents: {error}")
+                            
+                    except Exception as e:
+                        st.error(f"❌ Error uploading documents: {str(e)}")
+        
+        st.divider()
+        
+        # Show existing files in rawdata folder
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.subheader("📁 Files in rawdata/ Folder")
+        with col2:
+            if st.button("🔄 Refresh File List"):
+                st.rerun()
+        
+        rawdata_path = Path("rawdata")
+        if rawdata_path.exists():
+            files = list(rawdata_path.glob("*"))
+            if files:
+                file_info = []
+                for file in files:
+                    if file.is_file():
+                        file_info.append({
+                            "Filename": file.name,
+                            "Size": f"{file.stat().st_size / 1024:.1f} KB",
+                            "Type": file.suffix.upper() if file.suffix else "Unknown"
+                        })
+                
+                if file_info:
+                    df = pd.DataFrame(file_info)
+                    st.dataframe(df, width='stretch')
+                    st.info(f"📄 Found {len(file_info)} file(s) in rawdata folder")
+                    
+                    # File deletion section
+                    st.subheader("🗑️ Delete Files")
+                    files_to_delete = st.multiselect(
+                        "Select files to delete:",
+                        options=[file["Filename"] for file in file_info],
+                        help="Select files you want to remove from the rawdata folder"
+                    )
+                    
+                    if files_to_delete and st.button("🗑️ Delete Selected Files"):
+                        with st.spinner("Deleting files..."):
+                            deleted_count = 0
+                            for filename in files_to_delete:
+                                try:
+                                    file_path = rawdata_path / filename
+                                    file_path.unlink()
+                                    deleted_count += 1
+                                    st.success(f"✅ Deleted {filename}")
+                                except Exception as e:
+                                    st.error(f"❌ Error deleting {filename}: {str(e)}")
+                            
+                            if deleted_count > 0:
+                                st.success(f"✅ Successfully deleted {deleted_count} file(s)")
+                                st.rerun()
+                else:
+                    st.info("📁 No files found in rawdata folder")
+            else:
+                st.info("📁 No files found in rawdata folder")
+        else:
+            st.info("📁 rawdata folder does not exist yet")
+        
+        st.divider()
+        
+        # Document loading from folder
+        st.subheader("📂 Load Documents from Folder")
         
         # Store loaded documents in session state
         if "loaded_documents" not in st.session_state:
@@ -421,6 +543,23 @@ def main():
             doc_count = rag_manager.get_document_count()
             st.metric("Total Documents in Knowledge Base", doc_count)
             
+            # Show document breakdown by source
+            if doc_count > 0:
+                try:
+                    # Get all documents to analyze sources
+                    all_docs = rag_manager.search_documents("", k=doc_count)
+                    if all_docs:
+                        source_counts = {}
+                        for doc in all_docs:
+                            source = doc.metadata.get('source', 'Unknown')
+                            source_counts[source] = source_counts.get(source, 0) + 1
+                        
+                        st.subheader("📊 Document Breakdown by Source")
+                        for source, count in source_counts.items():
+                            st.info(f"• {source}: {count} chunks")
+                except Exception as e:
+                    st.info("📊 Document source breakdown not available")
+            
             if doc_count > 0:
                 # Create a simple chart
                 data = {"Documents": [doc_count], "Category": ["Stored"]}
@@ -472,7 +611,7 @@ def main():
         if st.button("🌐 Scrape Website"):
             if url:
                 with st.spinner(f"Scraping {url}..."):
-                    success, error = scrape_website(url)
+                    success, error = scrape_website(url, rag_manager)
                     
                     if success:
                         st.success(f"✅ Successfully scraped and stored {url}")
@@ -482,7 +621,7 @@ def main():
             else:
                 st.warning("Please enter a URL")
         
-        st.info("💡 Tip: The system will automatically extract text content from websites and add it to your knowledge base.")
+        st.info("💡 Tip: The system will automatically extract text content from websites and add it to your knowledge base. New documents will be added to your existing knowledge base without replacing previous documents.")
     
     with tab4:
         st.header("💬 Chat with RAG Agent")
