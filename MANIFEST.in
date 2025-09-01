@@ -1,0 +1,29 @@
+# Include all Python source files
+include *.py
+recursive-include app *.py
+
+# Include configuration files
+include langgraph.json
+include requirements.txt
+include pyproject.toml
+include setup.py
+
+# Include documentation
+include README.md
+
+# Include license if you have one
+# include LICENSE
+
+# Exclude development artifacts
+global-exclude __pycache__
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude *.pyd
+global-exclude .git*
+global-exclude .venv
+global-exclude venv
+global-exclude build
+global-exclude dist
+global-exclude *.egg-info
+global-exclude chroma_db
+global-exclude rawdata

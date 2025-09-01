@@ -1,31 +1,78 @@
-# Exclude virtual environment
-.venv/
-venv/
-
-# Exclude cache directories
+# Development artifacts
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Exclude git
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
 .git/
-.gitignore
+.mypy_cache/
+.pytest_cache/
+.hypothesis/
 
-# Exclude environment files
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local data (exclude for deployment)
+chroma_db/
+rawdata/
+*.db
+*.sqlite3
+
+# Environment files (should be set via platform)
 .env
-.env.bak
+.env.local
+.env.production
 
-# Exclude test files
+# Documentation
+README.md
+docs/
+*.md
+
+# Test files
+tests/
 test_*.py
 *_test.py
 
-# Exclude documentation
-README.md
+# CLI and web app files (not needed for LangGraph deployment)
+cli.py
+start_web_app.py
+web_app_enhanced.py
+create_env.py
 
-# Exclude local development files
-chroma_db/
-*.log
-
-# IMPORTANT: Do NOT exclude deps directory
-# deps/ is needed for the build process
+# IMPORTANT: Include deps directory for LangGraph deployment
+# !deps/
