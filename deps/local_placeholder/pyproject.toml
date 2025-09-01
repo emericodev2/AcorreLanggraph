@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-placeholder-dep"
+version = "0.0.0"
+description = "Placeholder dependency so LangGraph build step `/deps/*` succeeds"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["local_placeholder*"]
