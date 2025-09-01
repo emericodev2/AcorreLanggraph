@@ -75,4 +75,4 @@ web_app_enhanced.py
 create_env.py
 
 # IMPORTANT: Include deps directory for LangGraph deployment
-# !deps/
+!deps/
